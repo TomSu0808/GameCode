@@ -1,0 +1,212 @@
+global proc pCut()
+
+	{
+	if ( `window -ex pCutWindow` )
+	{
+	deleteUI -wnd pCutWindow;
+	}
+
+	window -title "pCut" 
+		-titleBar 1 
+		-toolbox 1
+		-resizeToFitChildren 0 
+		-s 1
+		pCutWindow;
+		
+
+	// repeatLast -ac enables repeat last command for button scripts
+	
+	rowColumnLayout -nc 1;
+	
+	button -label "Multi Cut" -bgc .50 .25 .25 -w 80 -command "setToolTo nexMultiCutCtx1; repeatLast -ac setToolTo nexMultiCutCtx1";
+
+	button -label "Split Poly" -bgc .5 .25 .25 -w 80 -command "SplitPolygonTool; repeatLast -ac SplitPolygonTool";
+	
+	button -label "Collapse" -bgc .35 .25 .25 -w 80 -command "bsMeshCollapse; repeatLast -ac bsMeshCollapse";
+
+	button -label "Extrude" -bgc .35 .25 .25 -w 80 -command "performPolyExtrude 0; repeatLast -ac performPolyExtrude 0"; 
+	
+	button -label "Delete" -bgc .5 0 0 -w 80 -command "DeletePolyElements; repeatLast -ac DeletePolyElements"; 	
+	
+	button -label "Move Cmpnt" -bgc .25 .25 .5 -w 80 -command "BSpolyMove; repeatLast -ac BSpolyMove";
+	
+	button -label "Add EdgeLoop" -bgc .25 .25 .4 -w 80 -command "SplitEdgeRingTool; repeatLast -ac SplitEdgeRingTool"; 	
+	
+	button -label "Slide Edge" -bgc .25 .25 .4 -w 80 -command  "SlideEdgeTool; repeatLast -ac SlideEdgeTool";	
+	
+	button -label "EdgeMove" -bgc .25 .25 .4 -w 80 -command  "bsEdgeMove; repeatLast -ac bsEdgeMove";
+
+	button -label "Edge" -bgc .25 .3 .25 -w 80 -command  "SelectEdgeMask; repeatLast -ac SelectEdgeMask";
+
+	button -label "Edgeloop" -bgc .25 .3 .25 -w 80 -command "SelectEdgeLoop; repeatLast -ac SelectEdgeLoop";
+	
+	button -label "Edgering" -bgc .25 .3 .25 -w 80 -command "SelectEdgeRing; repeatLast -ac SelectEdgeRing";
+	
+	button -label "Object" -bgc .25 .3 .25 -w 80 -command  "SelectToggleMode; repeatLast -ac SelectToggleMode";
+
+	button -label "Vertice" -bgc .25 .3 .25 -w 80 -command  "SelectVertexMask; repeatLast -ac SelectVertexMask";
+
+	button -label "Face" -bgc .25 .3 .25 -w 80 -command  "SelectFacetMask; repeatLast -ac SelectFacetMask";
+	
+	button -label "Multi Cmpnt" -bgc .25 .50 .25 -w 80 -command  "SelectMultiComponentMask; repeatLast -ac SelectMultiComponentMask";
+	
+	button -label "Tweak"  -bgc .25 .50 .25 -w 80 -command  "STRSTweakModeToggle; repeatLast -ac STRSTweakModeToggle" ; 
+	
+	button -label "ManipTgl"  -bgc .35 .25 .25 -w 80 -command  "bsmanipMoveTgl; repeatLast -ac bsmanipMoveTgl";
+	
+	button -label "EditPivot"  -bgc .35 .25 .25 -w 80 -command  "ctxEditMode; repeatLast -ac ctxEditMode";
+	  					
+	button -label "Bk Face Slct" -bgc .25 .25 .5 -w 80 -command  "backFaceCullSelected; repeatLast -ac backFaceCullSelected";
+	
+	button -label "Undo" -bgc .4 0 0 -w 80 -command  "undo; repeatLast -ac undo";
+		
+	showWindow pCutWindow;
+
+	}
+	
+	pCut;
+
+	
+
+	//Set move manipulator to move along edge
+	
+	global proc bsEdgeMove()
+	{
+	manipMoveOrient 2; manipMoveContext -edit -mode 6 Move;
+	}
+
+	//Toggle manipulator between object mode and component normals
+	
+	global proc bsmanipMoveTgl()
+	{
+		if (`manipMoveContext -q -mode Move` == "2")
+		manipMoveContext -e -mode 9 Move;
+		
+		else if (`manipMoveContext -q -mode Move` == "9")
+		{
+		manipMoveContext -e -orientAxes 0 0 0 -mode 2 Move; 
+	    resetTool Move;
+		}
+		
+		else if ((`manipMoveContext -q -mode Move` != "9") && (`manipMoveContext -q -mode Move` != "2"))
+		{
+		manipMoveContext -e -mode 2 Move;	
+		resetTool Move;
+		}
+	}
+	
+//This script  will toggle back face culling for polygon geometry while maintaining current component selection
+
+	global proc backFaceCullSelected()
+	
+	{
+
+	string $selComponents[];
+	
+	$selComponents = `ls -sl`;
+	
+
+		//VERTEX
+
+			if (`gmatch $selComponents[0] "*.vtx*"`)
+		{
+		changeSelectMode -object;
+		$selObject = `ls -sl`;	
+		ToggleBackfaceGeometry;
+		SelectVertexMask;
+		select $selComponents;	
+		}
+
+		//FACE
+
+		else if (`gmatch $selComponents[0] "*.f*"`)	
+
+		{
+		changeSelectMode -object;
+		$selObject = `ls -sl`;	
+		ToggleBackfaceGeometry;
+		SelectFacetMask;
+		select $selComponents;	
+		}
+
+		//EDGE
+
+		else if (`gmatch $selComponents[0] "*.e*"`)	
+
+		{
+		changeSelectMode -object;
+		$selObject = `ls -sl`;	
+		ToggleBackfaceGeometry;
+		SelectEdgeMask;
+		select $selComponents;	
+		}
+		
+		//UV
+
+		else if (`gmatch $selComponents[0] "*.ma*"`)	
+
+		{
+		changeSelectMode -object;
+		$selObject = `ls -sl`;	
+		ToggleBackfaceGeometry;
+		SelectUVMask;
+		select $selComponents;		
+		}
+		
+		else
+		{
+		changeSelectMode -object;
+		//SelectToggleMode;
+		ToggleBackfaceGeometry;
+		}
+}
+
+		
+//This script will toggle multiMesh selected faces or edges to regular edges or faces 
+
+	
+global proc bsMeshCollapse()
+	
+{
+
+string $selComponents[];
+	
+$selComponents = `ls -sl`;
+
+	//FACE
+
+	if (`gmatch $selComponents[0] "*.f*"`)	
+
+	{
+    selectType -smp 0 -sme 0 -smf 0 -smu 0 -pv 0 -pe 0 -pf 1 -puv 0 -meshComponents 0;
+	select $selComponents;	
+	PolygonCollapse;
+	}
+
+	//EDGE
+
+	else if  (`gmatch $selComponents[0] "*.e*"`)	
+
+	{
+    selectType -smp 0 -sme 0 -smf 0 -smu 0 -pv 0 -pe 1 -pf 0 -puv 0 -meshComponents 0;
+	select $selComponents;	
+	PolygonCollapse;
+	}
+		
+		
+	else
+		
+	{
+    selectType -smp 0 -sme 0 -smf 0 -smu 0 -pv 0 -pe 0 -pf 0 -puv 0 -meshComponents 1;
+	}	
+	
+	
+}
+
+// Transform component Tool	
+	
+global proc BSpolyMove( )
+{	
+performPolyMove "" 0;
+}
+	
