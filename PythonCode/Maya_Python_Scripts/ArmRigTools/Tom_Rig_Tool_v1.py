@@ -208,15 +208,6 @@ def split(div):
         start_joint = new_joint
 
 
-def create_ikHandle():
-    ik_handle = cmds.ikHandle(sj = var.joint1, ee = var.joint2, sol = "ikSplineSolver", name = "my_ikHandle",ccv = False, c = var.select)
-    cmds.select(var.joint1)
-    cmds.makeIdentity( apply = True, translate = True, rotate = True, scale = True)
-
-    cmds.delete(ik_handle)
-
-    cmds.delete("curve1")
-
 
 
 
