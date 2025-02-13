@@ -1,0 +1,9 @@
+This is a Maya joint-base muscle system. Set up the correct files direction before use it. Should change the file direction for each files:sys.path.append(xxxxx). Then excute UI.py file.
+
+Version 1.00:
+  Basic function for generate human joint group.
+  Maya UI
+
+Version 2.00
+  QT
+  Skin Weight and Skeletons json input&output
